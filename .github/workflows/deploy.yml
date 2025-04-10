@@ -1,0 +1,36 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t cloud-cicd-demo .
+
+      - name: Run container in background
+        run: docker run -d -p 3000:3000 --name app cloud-cicd-demo
+
+      - name: Wait for container to be ready
+        run: sleep 3
+
+      - name: Test /ping route
+        run: |
+          curl -f http://localhost:3000/ping | grep "Pong from the Cloud"
+
+      - name: Stop container
+        run: docker stop app
